@@ -6,10 +6,9 @@ The app keeps a separate Claude Code session list for each account. If you use m
 
 ## How to run
 
-First, sign in to the Claude desktop app with your other account. Then run this in Terminal:
+First, sign in to the Claude desktop app with your other account. Then run this in Terminal. It quits Claude, merges the sessions, and reopens Claude:
 
 ```sh
-# quits Claude, merges the sessions, reopens Claude
 curl -fsSL https://raw.githubusercontent.com/saikiran-rs/merge-sessions-across-accounts/main/merge-sessions.zsh | zsh
 ```
 
@@ -28,6 +27,16 @@ curl -fsSLO https://raw.githubusercontent.com/saikiran-rs/merge-sessions-across-
 less merge-sessions.zsh
 zsh merge-sessions.zsh
 ```
+
+Or clone the repo and run it from there:
+
+```sh
+git clone https://github.com/saikiran-rs/merge-sessions-across-accounts.git
+cd merge-sessions-across-accounts
+./merge-sessions.zsh
+```
+
+To update it later, run `git pull` in that folder.
 
 Use Terminal (or another terminal app), not the terminal inside the Claude app. The script has to quit Claude, which would close that terminal too.
 
