@@ -4,19 +4,38 @@
 # https://github.com/saikiran-rs/merge-sessions-across-accounts
 #
 #   ./merge-sessions.zsh -n   dry run: show what would change
-#   ./merge-sessions.zsh      merge (backs up first), then reopen Claude
+#   ./merge-sessions.zsh      quit Claude, merge (backs up first), reopen Claude
 #
 # Every session file is copied to every account folder, and the newest copy wins.
 # Deletes sync too: the app leaves a deleted_<id> file when you delete a session, so the session
 # is removed from every account instead of being copied back (unless it was used again later).
 
+APP=${MERGE_SESSIONS_APP:-Claude}   # overridable so the tests never touch the real app
+
 main() {
   emulate -L zsh
-  setopt local_options extended_glob null_glob
-  local dry=0 usage="usage: ${ZSH_ARGZERO:t} [-n]   (-n = dry run: show what would change)"
+  local dry=0 reopen=0 rc usage="usage: ${ZSH_ARGZERO:t} [-n]   (-n = dry run: show what would change)"
   [[ $1 == (-h|--help) ]] && { echo "$usage"; return 0 }
   [[ $1 == -n ]] && { dry=1; shift }
   (( $# )) && { echo "$usage" >&2; return 2 }
+  # quit the app first so its in-memory copies are saved now, not over the merge later.
+  # pgrep skips our own ancestors unless -a, so a match only with -a means we run inside the app.
+  if (( ! dry )) && pgrep -axq "$APP"; then
+    pgrep -xq "$APP" || { echo "Run this from Terminal, not from inside $APP: it has to quit $APP." >&2; return 1 }
+    echo "Quitting $APP..."
+    osascript -e "quit app \"$APP\"" >/dev/null || { echo "Couldn't quit $APP; nothing changed." >&2; return 1 }
+    local i
+    for i in {1..30}; do pgrep -xq "$APP" || break; sleep 1; done
+    pgrep -xq "$APP" && { echo "$APP didn't quit; nothing changed." >&2; return 1 }
+    reopen=1
+  fi
+  merge; rc=$?
+  (( reopen )) && { echo "Reopening $APP."; open -a "$APP" }
+  return $rc
+}
+
+merge() {
+  setopt local_options extended_glob null_glob
   local BASE="$HOME/Library/Application Support/Claude/claude-code-sessions"
   [[ -d "$BASE" ]] || { echo "No claude-code-sessions dir found." >&2; return 1 }
   local dirs=( "$BASE"/*/*(/) )
@@ -76,11 +95,7 @@ main() {
   (( r )) && msg+="; removed $r copy(ies) of ${#gone} deleted session(s)"
   echo "$msg; $live session(s) now in each of ${#dirs} account folder(s)."
   echo "Backup: $bak"
-  if pgrep -xq Claude; then
-    echo "Claude is running: quit (⌘Q) and reopen it now, before it saves its stale in-memory copies over the merge."
-  else
-    echo "Open Claude to see them."
-  fi
+  (( reopen )) || echo "Open $APP to see them."
 }
 
 main "$@"

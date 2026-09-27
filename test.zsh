@@ -6,6 +6,7 @@ SCRIPT=${0:A:h}/merge-sessions.zsh
 T=$(mktemp -d) || exit 1
 trap 'rm -rf -- "$T"' EXIT
 export HOME=$T
+export MERGE_SESSIONS_APP=merge-sessions-test-app                  # never quit the real Claude
 B="$HOME/Library/Application Support/Claude/claude-code-sessions"
 A1="$B/acct1111-0000/org11111"; A2="$B/acct2222-0000/org22222"
 mkdir -p "$A1" "$A2"
@@ -82,6 +83,22 @@ ok "s5 not copied when backup fails" '[[ ! -e $A1/local_s5.json ]]'
 print "== 8. arguments"
 run --dry-run; ok "unknown option rejected, nothing copied" '[[ ! -e $A1/local_s5.json ]]'
 ok "-h prints usage and exits 0"   'zsh $SCRIPT -h | grep -q usage'
+
+print "== 9. a running app is quit before the merge and reopened after (fake pgrep/osascript/open)"
+mkdir -p $T/bin
+print -r -- "#!/bin/zsh
+[[ -e $T/running ]]" > $T/bin/pgrep
+print -r -- "#!/bin/zsh
+print quit >> $T/log; rm -f $T/running" > $T/bin/osascript
+print -r -- "#!/bin/zsh
+print open \$* >> $T/log" > $T/bin/open
+chmod +x $T/bin/*
+: > $T/running
+PATH=$T/bin:$PATH run -n
+ok "dry run leaves the app alone"  '[[ ! -e $T/log ]]'
+sleep 1; PATH=$T/bin:$PATH run
+ok "app quit, then reopened"       '[[ $(<$T/log) == $'"'"'quit\nopen -a merge-sessions-test-app'"'"' ]]'
+ok "s5 merged"                     '[[ -f $A1/local_s5.json ]]'
 
 print "\n$pass passed, $fail failed"
 (( fail == 0 ))
