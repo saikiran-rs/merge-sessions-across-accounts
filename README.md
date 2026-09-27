@@ -9,15 +9,25 @@ The app keeps a separate Claude Code session list for each account. If you use m
 First, sign in to the Claude desktop app with your other account. Then run this in Terminal:
 
 ```sh
-git clone https://github.com/saikiran-rs/merge-sessions-across-accounts.git
-cd merge-sessions-across-accounts
-./merge-sessions.zsh -n   # optional: preview what would change (changes nothing)
-./merge-sessions.zsh      # quits Claude, merges the sessions, reopens Claude
+# quits Claude, merges the sessions, reopens Claude
+curl -fsSL https://raw.githubusercontent.com/saikiran-rs/merge-sessions-across-accounts/main/merge-sessions.zsh | zsh
 ```
 
-When Claude reopens, every account shows all of your sessions.
+When Claude reopens, every account shows all of your sessions. Each time you switch accounts after that, run the same command again. Nothing is installed or left behind.
 
-Each time you switch accounts after that, run `./merge-sessions.zsh` again from the same folder.
+To preview what would change first (this changes nothing):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/saikiran-rs/merge-sessions-across-accounts/main/merge-sessions.zsh | zsh -s -- -n
+```
+
+Prefer to read the script before running it? Download it, look through it, then run it:
+
+```sh
+curl -fsSLO https://raw.githubusercontent.com/saikiran-rs/merge-sessions-across-accounts/main/merge-sessions.zsh
+less merge-sessions.zsh
+zsh merge-sessions.zsh
+```
 
 Use Terminal (or another terminal app), not the terminal inside the Claude app. The script has to quit Claude, which would close that terminal too.
 
@@ -36,7 +46,7 @@ Use Terminal (or another terminal app), not the terminal inside the Claude app. 
 - To undo a run, quit the app (⌘Q), then copy the files from the backup folder back into that folder.
 - It relies on how the app stores sessions, which could change in an update. Tested with version 2.9939.2 of the app.
 - If one of your accounts belongs to your employer, merging copies its sessions into your other accounts. Check that this is allowed first.
-- `./test.zsh` runs the tests against a temporary folder, never your real sessions.
+- To run the tests, clone the repo and run `./test.zsh`. It uses a temporary folder, never your real sessions.
 
 ## License
 
