@@ -14,7 +14,7 @@ APP=${MERGE_SESSIONS_APP:-Claude}   # overridable so the tests never touch the r
 
 main() {
   emulate -L zsh
-  local dry=0 reopen=0 rc usage="usage: ${ZSH_ARGZERO:t} [-n]   (-n = dry run: show what would change)"
+  local dry=0 reopen=0 rc usage="usage: merge-sessions.zsh [-n]   (-n = dry run: show what would change)"
   [[ $1 == (-h|--help) ]] && { echo "$usage"; return 0 }
   [[ $1 == -n ]] && { dry=1; shift }
   (( $# )) && { echo "$usage" >&2; return 2 }
