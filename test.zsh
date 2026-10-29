@@ -100,5 +100,19 @@ sleep 1; PATH=$T/bin:$PATH run
 ok "app quit, then reopened"       '[[ $(<$T/log) == $'"'"'quit\nopen -a merge-sessions-test-app'"'"' ]]'
 ok "s5 merged"                     '[[ -f $A1/local_s5.json ]]'
 
+print "== 10. a deleted session's leftover .tmp goes too (the app would restore the session from it)"
+for a in $A1 $A2 $A3; do mk $a local_s6.json "s6 v1" 202609081000.00; mk $a local_s7.json "s7 v1" 202609081000.00; done
+mk $A2 local_s6.json.tmp "s6 save cut short" 202609081005.00      # app crashed mid-save in acct2
+mk $A3 local_s7.json.tmp "s7 v2 (used after delete)" 202609091030.00
+rm $A1/local_s6.json $A1/local_s7.json
+mk $A1 deleted_s6 1788858000000 202609091000.00
+mk $A1 deleted_s7 1788858000000 202609091000.00
+ok "dry run lists the leftover .tmp" 'zsh $SCRIPT -n | grep -q "remove  local_s6.json.tmp from acct2222-0000/org22222"'
+sleep 1; run
+ok "leftover .tmp removed with s6" '[[ ! -e $A2/local_s6.json.tmp && ! -e $A2/local_s6.json && ! -e $A3/local_s6.json ]]'
+ok ".tmp newer than the delete kept" '[[ -f $A3/local_s7.json.tmp && ! -e $A3/local_s7.json ]]'
+ok "other .tmp files untouched"    '[[ -f $A1/local_s9.json.tmp ]]'
+ok "removed .tmp is in backup"     '[[ -n $(print -l $HOME/.claude/backups/*/acct2222-0000/org22222/local_s6.json.tmp(N)) ]]'
+
 print "\n$pass passed, $fail failed"
 (( fail == 0 ))

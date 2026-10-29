@@ -61,7 +61,9 @@ merge() {
     for b in ${(k)newest}; do
       dest="$d/$b"
       if (( ${+gone[$b]} )); then
-        [[ -e "$dest" ]] && rm_dst+=("$dest")
+        # .tmp first, like the app's own delete: on load the app restores a session from an
+        # orphaned local_<id>.json.tmp, which would undo the delete
+        for f in "$dest.tmp" "$dest"; do [[ -e "$f" ]] && rm_dst+=("$f"); done
       elif [[ ! -e "$dest" || "${newest[$b]}" -nt "$dest" ]]; then
         cp_src+=("${newest[$b]}"); cp_dst+=("$dest")
       fi
@@ -89,10 +91,10 @@ merge() {
     if cp -p "${cp_src[i]}" "$tmp" && mv -f "$tmp" "${cp_dst[i]}"; then (( ++n )); else rm -f "$tmp"; fi
   done
   for f in $rm_dst; do
-    [[ ! "$f" -nt "${gone[${f:t}]}" ]] && rm -f "$f" && (( ++r ))
+    [[ ! "$f" -nt "${gone[${${f:t}%.tmp}]}" ]] && rm -f "$f" && (( ++r ))
   done
   local msg="Synced $n new/updated file(s)"
-  (( r )) && msg+="; removed $r copy(ies) of ${#gone} deleted session(s)"
+  (( r )) && msg+="; removed $r file(s) of ${#gone} deleted session(s)"
   echo "$msg; $live session(s) now in each of ${#dirs} account folder(s)."
   echo "Backup: $bak"
   (( reopen )) || echo "Open $APP to see them."

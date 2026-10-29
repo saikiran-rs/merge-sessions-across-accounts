@@ -53,7 +53,7 @@ Use Terminal (or another terminal app), not the terminal inside the Claude app. 
 - macOS only. It needs nothing beyond the built-in `zsh`.
 - Sessions are stored in `~/Library/Application Support/Claude/claude-code-sessions/<account>/<org>/`.
 - To undo a run, quit the app (⌘Q), then copy the files from the backup folder back into that folder.
-- It relies on how the app stores sessions, which could change in an update. Tested with version 2.9939.2 of the app.
+- It relies on how the app stores sessions, which could change in an update. Last checked with version 4.29.0 of the app.
 - If one of your accounts belongs to your employer, merging copies its sessions into your other accounts. Check that this is allowed first.
 - To run the tests, clone the repo and run `./test.zsh`. It uses a temporary folder, never your real sessions.
 
